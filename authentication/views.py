@@ -62,6 +62,9 @@ class RegisitrationView(View):
         #Get User Data
         #Validate the data
         #create user account
+        
+        firstname = request.POST['firstName']
+        lastname = request.POST['lastName']
         username = request.POST['username']
         email = request.POST['email']
         password = request.POST['password']
@@ -73,8 +76,9 @@ class RegisitrationView(View):
             if len(password)<8:
               messages.error(request, "Password is too short")
               return render(request, 'authentication/register.html', context)
-            user=User.objects.create_user(username=username, email=email)
+            user=User.objects.create_user(first_name = firstname, last_name= lastname, username=username, email=email)
             user.set_password(password)
+            user.is_active = False
             user.save()
             messages.success(request, "Account Successfully Created")
             return render(request, 'authentication/register.html')
