@@ -5,6 +5,7 @@ import json
 from django.contrib.auth.models import User
 from validate_email import validate_email
 from django.contrib import messages
+from django.core.mail import send_mail
 
 
 # Email validation view class
@@ -80,6 +81,18 @@ class RegisitrationView(View):
             user.set_password(password)
             user.is_active = False
             user.save()
+            email_subject ="Acitvat Your Account"
+            email_body = "Testing SMTP using Django"
+            send_email ="mwansachile@gmail.com"
+            recipient =email
+            
+            email = send_mail(
+                    email_subject,
+                    email_body,
+                    send_email,
+                    [recipient],
+                    fail_silently=False,
+              )
             messages.success(request, "Account Successfully Created")
             return render(request, 'authentication/register.html')
           

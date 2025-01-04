@@ -143,3 +143,12 @@ django_heroku.settings(locals())
 MESSAGE_TAGS={
     messages.ERROR : "danger"
 }
+
+
+#setup smtp mailing 
+EMAIL_HOST =os.getenv("EMAIL_HOST_SMTP")
+EMAIL_HOST_USER =os.getenv("EMAIL_HOST_USER")
+EMAIL_USE_TLS =True
+DEFAULT_FROM_EMAIL =os.getenv("EMAIL_HOST_USER")
+EMAIL_PORT =os.getenv("EMAIL_PORT")
+EMAIL_HOST_PASSWORD =os.getenv("EMAIL_HOST_PASSWORD")
