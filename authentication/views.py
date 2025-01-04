@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
 from django.http import JsonResponse
 import json 
@@ -6,6 +6,11 @@ from django.contrib.auth.models import User
 from validate_email import validate_email
 from django.contrib import messages
 from django.core.mail import send_mail
+from django. utils.encoding import force_bytes, force_str, DjangoUnicodeDecodeError
+from django. utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django. contrib.sites.shortcuts import get_current_site
+from django.urls import reverse
+from . import utils
 
 
 # Email validation view class
@@ -53,7 +58,7 @@ class UserNameValidation(View):
 
 
 # Registration view class for handling the registration page
-class RegisitrationView(View):
+class RegistrationView(View):
     def get(self,request):
         # Render the registration page template
         return render(request, 'authentication/register.html')
@@ -70,10 +75,10 @@ class RegisitrationView(View):
         email = request.POST['email']
         password = request.POST['password']
         context = {
-          "ValueFields": request.POST 
+        "ValueFields": request.POST 
         }
         if not User.objects.filter(username=username).exists():
-          if not User.objects.filter(email=email).exists():
+         if not User.objects.filter(email=email).exists():
             if len(password)<8:
               messages.error(request, "Password is too short")
               return render(request, 'authentication/register.html', context)
@@ -81,8 +86,24 @@ class RegisitrationView(View):
             user.set_password(password)
             user.is_active = False
             user.save()
+          
+            
+            """
+            In order to setup the link to activate the user for the website modifily the body
+            1. define the path to view to verify user
+            1.1 Get the domain we are on
+            1.2 concatenate the relative url of the verification view to the domain
+            1.3 identify user using uid, econde, decode back uid (uid user identification back and forth securely in mail process)
+            1.4 get user token useed for verification only used once
+            """
+            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+            our_domain = get_current_site(request).domain
+            link = reverse ("activate", kwargs={"uidb64": uidb64, "token": utils.token_generator.make_token(user)})
+            activate_url =f"http://{our_domain}{link}"
+            
+            
             email_subject ="Acitvat Your Account"
-            email_body = "Testing SMTP using Django"
+            email_body = f"Hi {user.first_name} \nPlease use the link to verify your account {activate_url}"
             send_email ="mwansachile@gmail.com"
             recipient =email
             
@@ -92,9 +113,12 @@ class RegisitrationView(View):
                     send_email,
                     [recipient],
                     fail_silently=False,
-              )
+                )
             messages.success(request, "Account Successfully Created")
             return render(request, 'authentication/register.html')
-          
         return render(request, 'authentication/register.html')
- 
+
+
+class VerificationView(View):
+    def get(self, request, uidb64, token ):
+        return redirect("login") 
