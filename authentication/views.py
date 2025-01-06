@@ -6,11 +6,12 @@ from django.contrib.auth.models import User
 from validate_email import validate_email
 from django.contrib import messages
 from django.core.mail import send_mail
-from django. utils.encoding import force_bytes, force_str, DjangoUnicodeDecodeError
-from django. utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django. contrib.sites.shortcuts import get_current_site
+from django.utils.encoding import force_bytes, force_str, DjangoUnicodeDecodeError
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from . import utils
+from django.contrib import auth 
 
 
 # Email validation view class
@@ -121,4 +122,53 @@ class RegistrationView(View):
 
 class VerificationView(View):
     def get(self, request, uidb64, token ):
+        
+        try:
+            #decode user id after activation it
+            id =force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=id)
+            
+            if not utils.token_generator.check_token(user, token):
+                messages.warning(request, "Invalid activation link or user already activated")
+                return redirect("login")
+            if user.is_active:
+                messages.info(request, "Accounnt is already Activated")
+                return redirect("login") 
+            user.is_active=True
+            user.save()
+            messages.success(request, "Account Activated Successfully")
+            return redirect("login")
+        except Exception (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            messages.error(request, "Invalid Activation Link")     
         return redirect("login") 
+    
+    
+class LoginView(View):
+    def get(self, request):
+        return render(request, "authentication/login.html")
+    
+    def post(self, request):
+        username = request.POST["username"]
+        password  = request.POST["password"]
+        
+        if username and password:
+            user =auth.authenticate(username=username, password = password)
+            if user:
+                if user.is_active:
+                    auth.login(request, user)
+                    messages.success(request,f"Welcome {user.first_name}. You're logged in")
+                    return redirect("expenses")
+            messages.error(request, "Accoount is not active, please check email")   
+            return render(request, "authentication/login.html")    
+        else:
+            messages.error(request, "Please fill all fields")   
+            return render(request, "authentication/login.html")           
+                    
+                    
+                    
+class LogOutView(View):
+    def post(self, request):
+        auth.logout(request)
+        messages.success(request, "You have been logged out")
+        return redirect("login")
+        
