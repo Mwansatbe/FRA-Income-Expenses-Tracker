@@ -3,6 +3,7 @@ from . models import Category, Expense
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control
 from django.contrib import messages
+from django.shortcuts import get_object_or_404
 
 
 # Create your views here.
@@ -49,6 +50,58 @@ def add_expense(request):
   messages.success(request, 'Expenses Saved Successfully')
   
   return redirect('expenses')
+          
+      
+
+def expense_edit(request, id):
+    # Fetch the expense and categories
+    expense = get_object_or_404(Expense, pk=id)
+    categories = Category.objects.all()
+
+    if request.method == "GET":
+        # Pre-fill the form with existing values
+        context = {
+            'expense': expense,
+            'values': expense,
+            'categories': categories,
+        }
+        return render(request, "expenses/edit-expense.html", context)
+
+    elif request.method == "POST":
+        # Get form data
+        amount = request.POST.get('amount')
+        description = request.POST.get('description')
+        category = request.POST.get('category')
+        expense_date = request.POST.get('expense_date')
+
+        # Validation checks
+        if not amount or not description or not category or not expense_date:
+            messages.error(request, "All fields are required!")
+            context = {
+                'expense': expense,
+                'values': {
+                    'amount': amount,
+                    'description': description,
+                    'category': category,
+                    'expense_date': expense_date,
+                },
+                'categories': categories,
+            }
+            return render(request, "expenses/edit-expense.html", context)
+
+        # Update the expense object
+        expense.owner=request.user
+        expense.amount = amount
+        expense.description = description
+        expense.category = category
+        expense.expense_date = expense_date
+        expense.save()
+
+        # Success message and redirect
+        messages.success(request, "Expense updated successfully")
+        return redirect('expenses')  # Replace 'expenses' with the correct URL name
+
+
   
   
   
