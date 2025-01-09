@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
+from django.core.paginator import Paginator
+
 
 
 # Create your views here.
@@ -12,8 +14,13 @@ from django.shortcuts import get_object_or_404
 def index(request):
   categories = Category.objects.all()
   expenses=Expense.objects.filter(owner=request.user)
+  paginator=Paginator(expenses, 2)
+  page_number= request.GET.get('page')
+  page_obj=Paginator.get_page(paginator, page_number)
+  
   context={
-    "expenses": expenses
+    "expenses": expenses,
+    "page_obj": page_obj
   }
   return render(request, 'expenses/index.html', context)
 
