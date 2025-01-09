@@ -103,6 +103,19 @@ def expense_edit(request, id):
 
 
   
+def delete_expense(request, id):
+    # Safely retrieve the expense object or return a 404 error if it doesn't exist
+    expense = get_object_or_404(Expense, pk=id)
+    
+    # Delete the expense
+    expense.delete()
+    
+    # Display a success message to the user
+    messages.success(request, 'Expense removed successfully.')
+    
+    # Redirect to the expenses list page
+    return redirect('expenses')
+  
   
   
  

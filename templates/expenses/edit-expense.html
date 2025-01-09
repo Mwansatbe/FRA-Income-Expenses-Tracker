@@ -4,15 +4,22 @@
 <h1>Edit Expense</h1>
 
 <div class="contain mt-4">
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item">
-        <a href="{% url 'expenses' %}">Expenses</a>
-      </li>
-      <li class="breadcrumb-item active" aria-current="page">Edit Expense</li>
-    </ol>
-  </nav>
-</div>
+  <div class="row">
+    <div class="col-md-10">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% url 'expenses' %}">Expenses</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">Edit Expense</li>
+        </ol>
+      </nav>
+    </div>
+    <div class="col-md-2">
+      <a href="{% url 'delete-expense' id=expense.id %}" class="btn btn-danger btn-sm p-1.7 mt-1" >Delete</a>
+    </div>
+
+  </div>
 
 <div class="card">
   <div class="card-body">
