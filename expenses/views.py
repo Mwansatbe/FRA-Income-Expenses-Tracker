@@ -33,18 +33,38 @@ def search_expense(request):
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required(login_url="/authentication/login")
+
 def index(request):
-  categories = Category.objects.all()
-  expenses=Expense.objects.filter(owner=request.user)
-  paginator=Paginator(expenses, 5)
-  page_number= request.GET.get('page')
-  page_obj=Paginator.get_page(paginator, page_number)
+    categories = Category.objects.all()  # Get all categories
+    expenses = Expense.objects.filter(owner=request.user)  # Filter expenses by the logged-in user
+
+    # Create a paginator object with 5 items per page
+    paginator = Paginator(expenses, 10)
+
+    # Get the page number from the GET parameters
+    page_number = request.GET.get('page')
+
+    # Get the page object for the current page number
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "expenses": expenses,
+        "page_obj": page_obj
+    }
+    return render(request, 'expenses/index.html', context)
   
-  context={
-    "expenses": expenses,
-    "page_obj": page_obj
-  }
-  return render(request, 'expenses/index.html', context)
+# def index(request):
+#   categories = Category.objects.all()
+#   expenses=Expense.objects.filter(owner=request.user)
+#   paginator=Paginator(expenses, 5)
+#   page_number= request.GET.get('page')
+#   page_obj=Paginator.get_page(paginator, page_number)
+  
+#   context={
+#     "expenses": expenses,
+#     "page_obj": page_obj
+#   }
+#   return render(request, 'expenses/index.html', context)
 
 def add_expense(request):
   categories = Category.objects.all()
