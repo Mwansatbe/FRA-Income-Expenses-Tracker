@@ -4426,7 +4426,9 @@ fieldset:disabled .btn {
   margin-bottom: var(--bs-breadcrumb-margin-bottom);
   font-size: var(--bs-breadcrumb-font-size);
   list-style: none;
-  background-color: var(--bs-breadcrumb-bg);
+  background-color: lightgray;
+  width: 100%;
+  padding: 8px;
 }
 .breadcrumb-item + .breadcrumb-item {
   padding-left: var(--bs-breadcrumb-item-padding-x);
