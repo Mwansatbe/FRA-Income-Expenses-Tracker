@@ -8,11 +8,13 @@ from django.core.paginator import Paginator
 import json
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from userpreferences.models import UserPreferences
 
 
 
 # Create your views here.
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required(login_url="/authentication/login")
 def search_expense(request):
     if request.method == 'POST':
         search_str = json.loads(request.body).get('searchText')
@@ -23,20 +25,15 @@ def search_expense(request):
             category__icontains=search_str, owner=request.user)
         data = expenses.values()
         return JsonResponse(list(data), safe=False)
-    
-    
 
 
 
-
-
-
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required(login_url="/authentication/login")
-
 def index(request):
     categories = Category.objects.all()  # Get all categories
     expenses = Expense.objects.filter(owner=request.user)  # Filter expenses by the logged-in user
+    
+    currency = UserPreferences.objects.get(user=request.user).currency
 
     # Create a paginator object with 5 items per page
     paginator = Paginator(expenses, 10)
@@ -49,7 +46,8 @@ def index(request):
 
     context = {
         "expenses": expenses,
-        "page_obj": page_obj
+        "page_obj": page_obj,
+        'currency': currency
     }
     return render(request, 'expenses/index.html', context)
   
@@ -66,6 +64,7 @@ def index(request):
 #   }
 #   return render(request, 'expenses/index.html', context)
 
+@login_required(login_url="/authentication/login")
 def add_expense(request):
   categories = Category.objects.all()
   context ={
@@ -101,7 +100,7 @@ def add_expense(request):
   return redirect('expenses')
           
       
-
+@login_required(login_url="/authentication/login")
 def expense_edit(request, id):
     # Fetch the expense and categories
     expense = get_object_or_404(Expense, pk=id)
@@ -151,7 +150,7 @@ def expense_edit(request, id):
         return redirect('expenses')  # Replace 'expenses' with the correct URL name
 
 
-  
+@login_required(login_url="/authentication/login")  
 def delete_expense(request, id):
     # Safely retrieve the expense object or return a 404 error if it doesn't exist
     expense = get_object_or_404(Expense, pk=id)
