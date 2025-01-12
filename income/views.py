@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404
 import json
 from django.http import HttpResponse, JsonResponse
+from django.utils.dateparse import parse_date
 
 # Create your views here.
 
@@ -95,57 +96,104 @@ def add_income(request):
 
 
 
-
-
-
-
-@login_required(login_url="/authentication/login")
+@login_required(login_url='/authentication/login')
 def income_edit(request, id):
-    # Fetch the income and categories
-    income = get_object_or_404(Income, pk=id)
+    income = Income.objects.get(pk=id)
     sources = Source.objects.all()
+    context = {
+        'income': income,
+        'values': income,
+        'sources': sources
+    }
+    if request.method == 'GET':
+        return render(request, 'income/edit-income.html', context)
+    
+    if request.method == 'POST':
+        amount = request.POST['amount']
+        
+        if not amount:
+            messages.error(request, 'Amount is required')
+            return render(request, 'income/edit-income.html', context)
+        
+        description = request.POST['description']
+        date = request.POST['income_date']
+        source = request.POST['source']
+        
+        if not description:
+            messages.error(request, 'Description is required')
+            return render(request, 'income/edit-income.html', context)
+        
+        # Parse the date from string to date object
+        income_date_parsed = parse_date(date)
+        if not income_date_parsed:
+            messages.error(request, 'Invalid date format')
+            return render(request, 'income/edit-income.html', context)
 
-    if request.method == "GET":
-        context = {
-            'income': income,
-            'values': income,
-            'sources': sources,
-        }
-        print(f"GET Request Context: {context}")  # Debugging
-        return render(request, "income/edit-income.html", context)
-
-    elif request.method == "POST":
-        # Form data and validation
-        amount = request.POST.get('amount')
-        description = request.POST.get('description')
-        source = request.POST.get('source')
-        income_date = request.POST.get('income_date')
-
-        if not all([amount, description, source, income_date]):
-            messages.error(request, "All fields are required!")
-            context = {
-                'income': income,
-                'values': {
-                    'amount': amount,
-                    'description': description,
-                    'category': source,
-                    'income_date': income_date,
-                },
-                'sources': sources,
-            }
-            print(f"POST Request Context: {context}")  # Debugging
-            return render(request, "income/edit-income.html", context)
-
-        # Save changes
+        # Update the expense
         income.owner = request.user
         income.amount = amount
-        income.description = description
+        income.date = income_date_parsed
         income.source = source
-        income.income_date = income_date
+        income.description = description
+        
         income.save()
+        messages.success(request, 'Record updated successfully')
 
-        messages.success(request, "Record updated successfully")
-        return redirect('income')  # Redirect to the income list view
+        return redirect('income')
+
+
+
+
+
+
+
+# @login_required(login_url="/authentication/login")
+# def income_edit(request, id):
+#     # Fetch the income and categories
+#     income = get_object_or_404(Income, pk=id)
+#     sources = Source.objects.all()
+
+#     if request.method == "GET":
+#         context = {
+#             'income': income,
+#             'values': income,
+#             'sources': sources,
+#         }
+#         print(f"GET Request Context: {context}")  # Debugging
+#         return render(request, "income/edit-income.html", context)
+
+#     elif request.method == "POST":
+#         # Form data and validation
+#         amount = request.POST.get('amount')
+#         description = request.POST.get('description')
+#         source = request.POST.get('source')
+#         income_date = request.POST.get('income_date')
+
+#         if not all([amount, description, source, income_date]):
+#             messages.error(request, "All fields are required!")
+#             context = {
+#                 'income': income,
+#                 'values': {
+#                     'amount': amount,
+#                     'description': description,
+#                     'category': source,
+#                     'income_date': income_date,
+#                 },
+#                 'sources': sources,
+#             }
+#             print(f"POST Request Context: {context}")  # Debugging
+#             return render(request, "income/edit-income.html", context)
+
+#         # Save changes
+#         income.owner = request.user
+#         income.amount = amount
+#         income.description = description
+#         income.source = source
+#         income.income_date = income_date
+#         income.save()
+
+#         messages.success(request, "Record updated successfully")
+#         return redirect('income')  # Redirect to the income list view
 
 
 

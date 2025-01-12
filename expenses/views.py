@@ -9,7 +9,7 @@ import json
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from userpreferences.models import UserPreferences
-
+from django.utils.dateparse import parse_date
 
 
 # Create your views here.
@@ -98,56 +98,109 @@ def add_expense(request):
   messages.success(request, 'Expenses Saved Successfully')
   
   return redirect('expenses')
+
+
+
+@login_required(login_url='/authentication/login')
+def expense_edit(request, id):
+    expense = Expense.objects.get(pk=id)
+    categories = Category.objects.all()
+    context = {
+        'expense': expense,
+        'values': expense,
+        'categories': categories
+    }
+    if request.method == 'GET':
+        return render(request, 'expenses/edit-expense.html', context)
+    
+    if request.method == 'POST':
+        amount = request.POST['amount']
+        
+        if not amount:
+            messages.error(request, 'Amount is required')
+            return render(request, 'expenses/edit-expense.html', context)
+        
+        description = request.POST['description']
+        date = request.POST['expense_date']
+        category = request.POST['category']
+        
+        if not description:
+            messages.error(request, 'Description is required')
+            return render(request, 'expenses/edit-expense.html', context)
+        
+        # Parse the date from string to date object
+        expense_date_parsed = parse_date(date)
+        if not expense_date_parsed:
+            messages.error(request, 'Invalid date format')
+            return render(request, 'expenses/edit-expense.html', context)
+
+        # Update the expense
+        expense.owner = request.user
+        expense.amount = amount
+        expense.date = expense_date_parsed
+        expense.category = category
+        expense.description = description
+        
+        expense.save()
+        messages.success(request, 'Expense updated successfully')
+
+        return redirect('expenses')
+
+
+
+
+
+
           
       
-@login_required(login_url="/authentication/login")
-def expense_edit(request, id):
-    # Fetch the expense and categories
-    expense = get_object_or_404(Expense, pk=id)
-    categories = Category.objects.all()
+# @login_required(login_url="/authentication/login")
+# def expense_edit(request, id):
+#     # Fetch the expense and categories
+#     expense = get_object_or_404(Expense, pk=id)
+#     categories = Category.objects.all()
 
-    if request.method == "GET":
-        # Pre-fill the form with existing values
-        context = {
-            'expense': expense,
-            'values': expense,
-            'categories': categories,
-        }
-        return render(request, "expenses/edit-expense.html", context)
+#     if request.method == "GET":
+#         # Pre-fill the form with existing values
+#         context = {
+#             'expense': expense,
+#             'values': expense,
+#             'categories': categories,
+#         }
+#         return render(request, "expenses/edit-expense.html", context)
 
-    elif request.method == "POST":
-        # Get form data
-        amount = request.POST.get('amount')
-        description = request.POST.get('description')
-        category = request.POST.get('category')
-        expense_date = request.POST.get('expense_date')
+#     elif request.method == "POST":
+#         # Get form data
+#         amount = request.POST.get('amount')
+#         description = request.POST.get('description')
+#         category = request.POST.get('category')
+#         expense_date = request.POST.get('expense_date')
 
-        # Validation checks
-        if not amount or not description or not category or not expense_date:
-            messages.error(request, "All fields are required!")
-            context = {
-                'expense': expense,
-                'values': {
-                    'amount': amount,
-                    'description': description,
-                    'category': category,
-                    'expense_date': expense_date,
-                },
-                'categories': categories,
-            }
-            return render(request, "expenses/edit-expense.html", context)
+#         # Validation checks
+#         if not amount or not description or not category or not expense_date:
+#             messages.error(request, "All fields are required!")
+#             context = {
+#                 'expense': expense,
+#                 'values': {
+#                     'amount': amount,
+#                     'description': description,
+#                     'category': category,
+#                     'expense_date': expense_date,
+#                 },
+#                 'categories': categories,
+#             }
+#             return render(request, "expenses/edit-expense.html", context)
 
-        # Update the expense object
-        expense.owner=request.user
-        expense.amount = amount
-        expense.description = description
-        expense.category = category
-        expense.expense_date = expense_date
-        expense.save()
+#         # Update the expense object
+#         expense.owner=request.user
+#         expense.amount = amount
+#         expense.description = description
+#         expense.category = category
+#         expense.expense_date = expense_date
+#         expense.save()
 
-        # Success message and redirect
-        messages.success(request, "Expense updated successfully")
-        return redirect('expenses')  # Replace 'expenses' with the correct URL name
+#         # Success message and redirect
+#         messages.success(request, "Expense updated successfully")
+#         return redirect('expenses')  # Replace 'expenses' with the correct URL name
 
 
 @login_required(login_url="/authentication/login")  

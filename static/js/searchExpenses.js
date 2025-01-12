@@ -24,7 +24,7 @@ document.getElementById("searchField").addEventListener("input", (e) => {
     }
 
     // Make the API call to search expenses
-    fetch("/expenses/search-expense", {
+    fetch("/search-expense", {
       body: JSON.stringify({ searchText: searchValue }), // Send search term as body
       method: "POST", // Use POST method
     })
