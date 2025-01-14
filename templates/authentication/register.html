@@ -79,11 +79,15 @@
             <input type="submit" value="Register" class="btn btn-block btn-primary w-100 submit-btn">
           </div>
         </form> 
+        <div class="container">
+          <span class="text-lead lead">Don't have an Account?</span>
+          <a href="{% url 'register' %}" class="hell">Register</a><br>
+          <span class="text-lead lead">Have an account ?</span>
+          <a href="{% url 'login' %}" class="hell">Login</a>
+          
+        </div>
       </div>
-      <span>Don't have an Account?</span>
-      <a href="{% url 'register' %}" class="hell">Register</a>
-      <span>Forgot password?</span>
-      <a href="{% url 'register' %}" class="hell">Reset</a>
+
     </div>
   </div>
   <div class="col-md-4"></div>

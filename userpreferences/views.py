@@ -15,11 +15,15 @@ def index(request):
         data = json.load(json_file)
         for k, v in data.items():
             currency_data.append({'name': k, 'value': v})
-
+            
+            
+            
+    default_currency = 'USD'
     exists = UserPreferences.objects.filter(user=request.user).exists()
     user_preferences = None
     if exists:
-        user_preferences = UserPreferences.objects.get(user=request.user)
+        user_preferences = UserPreferences.objects.get(user=request.user,  currency=default_currency)
+        
     if request.method == 'GET':
 
         return render(request, 'preferences/index.html', {'currencies': currency_data, 'user_preferences': user_preferences})

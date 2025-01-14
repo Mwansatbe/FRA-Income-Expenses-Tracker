@@ -8,7 +8,11 @@
   <div class="col-md-4">
     <div class="card mt-5">
       <div class="card-title mt-4 ps-3">
-        <h4>LOGIN FRA DASHBOARD</h4>
+        <h4 style="display: flex;
+        flex-direction: column; justify-content: center; align-items: center;">
+          <img src="{% static 'images/logo-main-1.png' %}" height="35" width= "100" alt="FRA Logo">
+          LOGIN FRA DASHBOARD
+        </h4>
       </div>  
       <div class="card-body">
         <form action="{% url 'login' %}" method="post" id="loginForm">
@@ -41,12 +45,14 @@
             <input type="submit" value="Login" class="btn btn-block btn-primary w-100 submit-btn">
           </div>
         </form> 
+        <div class="container">
+          <span class="text-lead lead">Don't have an Account?</span>
+          <a href="{% url 'register' %}" class="hell">Register</a><br>
+          <span class="text-lead lead">Forgot password?</span>
+          <a href="{% url 'request-reset-link' %}" class="hell">Reset</a>
+        </div>
       </div>
-      <span>Don't have an Account?</span>
-      <a href="{% url 'register' %}" class="hell">Register</a>
-      <span>Forgot password?</span>
-      <a href="{% url 'register' %}" class="hell">Reset</a>
-    </div>
+      
   </div>
   <div class="col-md-4"></div>
 </div>

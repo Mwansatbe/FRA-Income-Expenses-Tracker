@@ -27,29 +27,61 @@ def search_expense(request):
         return JsonResponse(list(data), safe=False)
 
 
-
 @login_required(login_url="/authentication/login")
 def index(request):
-    categories = Category.objects.all()  # Get all categories
-    expenses = Expense.objects.filter(owner=request.user)  # Filter expenses by the logged-in user
-    
-    currency = UserPreferences.objects.get(user=request.user).currency
+    # Get all categories (if needed for filtering or additional context)
+    categories = Category.objects.all()
 
-    # Create a paginator object with 5 items per page
+    # Get all expenses for the logged-in user
+    expenses = Expense.objects.filter(owner=request.user)
+
+    # Try to get user preferences or create a new one if not present
+    try:
+        user_preferences = UserPreferences.objects.get(user=request.user)
+    except UserPreferences.DoesNotExist:
+        # If no preferences found, create a new one with default 'USD' currency
+        user_preferences = UserPreferences.objects.create(user=request.user, currency='USD')
+
+    # Get the currency from user preferences
+    currency = user_preferences.currency
+
+    # Paginate the expenses (10 items per page)
     paginator = Paginator(expenses, 10)
-
-    # Get the page number from the GET parameters
     page_number = request.GET.get('page')
-
-    # Get the page object for the current page number
     page_obj = paginator.get_page(page_number)
 
+    # Context for the template
     context = {
         "expenses": expenses,
         "page_obj": page_obj,
-        'currency': currency
+        "currency": currency,
+        "categories": categories,
     }
     return render(request, 'expenses/index.html', context)
+
+
+# @login_required(login_url="/authentication/login")
+# def index(request):
+#     categories = Category.objects.all()  # Get all categories
+#     expenses = Expense.objects.filter(owner=request.user)  # Filter expenses by the logged-in user
+    
+#     currency = UserPreferences.objects.get(user=request.user).currency
+
+#     # Create a paginator object with 5 items per page
+#     paginator = Paginator(expenses, 10)
+
+#     # Get the page number from the GET parameters
+#     page_number = request.GET.get('page')
+
+#     # Get the page object for the current page number
+#     page_obj = paginator.get_page(page_number)
+
+#     context = {
+#         "expenses": expenses,
+#         "page_obj": page_obj,
+#         'currency': currency
+#     }
+#     return render(request, 'expenses/index.html', context)
   
 # def index(request):
 #   categories = Category.objects.all()
