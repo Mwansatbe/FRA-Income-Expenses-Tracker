@@ -6,12 +6,20 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
 from userpreferences.models import UserPreferences
 from django.utils.dateparse import parse_date
 import datetime
-
+import csv
+import xlwt
+from django.template.loader import render_to_string
+from weasyprint import HTML
+import tempfile
+from django.db.models import Sum
+from django.conf import settings
+import base64
+import os
 
 # Create your views here.
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -199,6 +207,7 @@ def delete_expense(request, id):
     
     
     
+    
 def expense_category_summary(request):
     todays_date = datetime.date.today()
     six_months_ago = todays_date-datetime.timedelta(days=30*6)
@@ -226,6 +235,87 @@ def expense_category_summary(request):
 
 def stats_view(request):
     return render(request, 'expenses/stats.html')
+
+
+def export_csv(request):
+    response = HttpResponse(content_type="text/csv")
+    response ["Content-Disposition"]="Attachment; filename=Expense"+str(datetime.datetime.now())+ ".csv"
+    writer=csv.writer(response)
+    writer.writerow(['Amount', 'Description', 'Category', 'Date'])
+    expenses =Expense.objects.filter(owner=request.user)
+    
+    for expense in expenses:
+        writer.writerow([expense.amount, expense.description, expense.category, expense.date])
+    
+    return response
+    
+    
+    
+
+def export_excel(request):
+    response=HttpResponse(content_type="application/ms-excel")
+    response ["Content-Disposition"]="Attachment; filename=Expense"+str(datetime.datetime.now())+ ".xls"
+    wb = xlwt.Workbook(encoding="utf-8")
+    ws = wb.add_sheet("Expenses")
+    row_num=0
+    font_style=xlwt.XFStyle()
+    font_style.font.bold=True
+    
+    columns =['Amount', 'Description', 'Category', 'Date']
+    
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], font_style)
+        
+    font_style=xlwt.XFStyle()
+    rows =Expense.objects.filter(owner=request.user).values_list('amount', 'description', 'category', 'date')
+    
+    for row in rows:
+        row_num+=1
+        
+        for col_num in range(len(row)):
+            ws.write(row_num, col_num,str(row[col_num]), font_style)
+            
+    wb.save(response)
+    return response
+        
+    
+    
+
+def export_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "inline; attachment; filename=Expenses_" + str(datetime.datetime.now()) + ".pdf"
+    
+    # Get the user's expenses and calculate total
+    expenses = Expense.objects.filter(owner=request.user)
+    total = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    # Convert image to base64
+    logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo-main-1.png')
+    with open(logo_path, 'rb') as img_file:
+        logo_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+    
+    # Generate HTML
+    html_string = render_to_string('expenses/pdf-output.html', {
+        'expenses': expenses,
+        'total': total,
+        'logo_base64': logo_base64
+    })
+    
+    # Generate PDF
+    html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
+    result = html.write_pdf()
+    
+    response.write(result)
+    return response
+    
+    
+    
+    
+    
+    
+    
+    
+    
           
       
 # @login_required(login_url="/authentication/login")

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Report</title>
+  <style>
+@page{
+  size:"A4";
+  margin: 2.5cm, 1.5cm, 3.5 cm, 1.5cm;
+
+  @top-center{
+    content:"FRA Expenses Report";
+  }
+  @bottom_right{
+    content: "Page " counter(page) " of " counter(pages);
+  }
+}
+
+#img{
+width: 110px;
+}
+
+
+
+  </style>
+</head>
+<body>
+  <img src="data:image/png;base64,{{ logo_base64 }}" id="img" width="30" alt="FRA Logo">
+  <h2>
+    Expenses List
+  </h2>
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Amount</th>
+        <th>Category</th>
+        <th>Description</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {%for expense in expenses%}
+      <tr>
+        <th>{{forloop.counter}}</th>
+        <th>{{expense.amount}}</th>
+        <th>{{expense.category}}</th>
+        <th>{{expense.description}}</th>
+        <th>{{expense.date}}</th>
+      </tr>
+      {% endfor %}
+
+      <tr>
+        <td>Total</td>
+        <td>{{total}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+</html>
