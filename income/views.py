@@ -10,6 +10,16 @@ import json
 from django.http import HttpResponse, JsonResponse
 from django.utils.dateparse import parse_date
 import datetime
+from django.http import HttpResponse
+import csv
+import xlwt
+from django.template.loader import render_to_string
+from weasyprint import HTML
+import datetime
+from django.db.models import Sum
+import os
+import base64
+from django.conf import settings
 
 # Create your views here.
 
@@ -56,6 +66,7 @@ def index(request):
         'currency': currency
     }
     return render(request, 'income/index.html', context)
+  
   
   
   
@@ -302,3 +313,67 @@ def income_sources_summary(request):
 
 def stats_view(request):
     return render(request, 'income/stats.html')
+
+def export_csv(request):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = "Attachment; filename=Income_" + str(datetime.datetime.now()) + ".csv"
+    writer = csv.writer(response)
+    writer.writerow(['Amount', 'Description', 'Source', 'Date'])
+    income = Income.objects.filter(owner=request.user)
+    
+    for item in income:
+        writer.writerow([item.amount, item.description, item.source, item.date])
+    
+    return response
+
+def export_excel(request):
+    response = HttpResponse(content_type="application/ms-excel")
+    response["Content-Disposition"] = "Attachment; filename=Income_" + str(datetime.datetime.now()) + ".xls"
+    wb = xlwt.Workbook(encoding="utf-8")
+    ws = wb.add_sheet("Income")
+    row_num = 0
+    font_style = xlwt.XFStyle()
+    font_style.font.bold = True
+    
+    columns = ['Amount', 'Description', 'Source', 'Date']
+    
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], font_style)
+        
+    font_style = xlwt.XFStyle()
+    rows = Income.objects.filter(owner=request.user).values_list('amount', 'description', 'source', 'date')
+    
+    for row in rows:
+        row_num += 1
+        for col_num in range(len(row)):
+            ws.write(row_num, col_num, str(row[col_num]), font_style)
+            
+    wb.save(response)
+    return response
+
+def export_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "inline; attachment; filename=Income_" + str(datetime.datetime.now()) + ".pdf"
+    
+    # Get the user's income and calculate total
+    income = Income.objects.filter(owner=request.user)
+    total = income.aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    # Convert image to base64
+    logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo-main-1.png')
+    with open(logo_path, 'rb') as img_file:
+        logo_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+    
+    # Generate HTML
+    html_string = render_to_string('income/pdf-output.html', {
+        'income': income,
+        'total': total,
+        'logo_base64': logo_base64
+    })
+    
+    # Generate PDF
+    html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
+    result = html.write_pdf()
+    
+    response.write(result)
+    return response

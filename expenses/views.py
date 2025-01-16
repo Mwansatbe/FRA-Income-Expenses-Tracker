@@ -239,10 +239,10 @@ def stats_view(request):
 
 def export_csv(request):
     response = HttpResponse(content_type="text/csv")
-    response ["Content-Disposition"]="Attachment; filename=Expense"+str(datetime.datetime.now())+ ".csv"
-    writer=csv.writer(response)
+    response["Content-Disposition"] = "Attachment; filename=Expenses_" + str(datetime.datetime.now()) + ".csv"
+    writer = csv.writer(response)
     writer.writerow(['Amount', 'Description', 'Category', 'Date'])
-    expenses =Expense.objects.filter(owner=request.user)
+    expenses = Expense.objects.filter(owner=request.user)
     
     for expense in expenses:
         writer.writerow([expense.amount, expense.description, expense.category, expense.date])
@@ -253,27 +253,26 @@ def export_csv(request):
     
 
 def export_excel(request):
-    response=HttpResponse(content_type="application/ms-excel")
-    response ["Content-Disposition"]="Attachment; filename=Expense"+str(datetime.datetime.now())+ ".xls"
+    response = HttpResponse(content_type="application/ms-excel")
+    response["Content-Disposition"] = "Attachment; filename=Expenses_" + str(datetime.datetime.now()) + ".xls"
     wb = xlwt.Workbook(encoding="utf-8")
     ws = wb.add_sheet("Expenses")
-    row_num=0
-    font_style=xlwt.XFStyle()
-    font_style.font.bold=True
+    row_num = 0
+    font_style = xlwt.XFStyle()
+    font_style.font.bold = True
     
-    columns =['Amount', 'Description', 'Category', 'Date']
+    columns = ['Amount', 'Description', 'Category', 'Date']
     
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], font_style)
         
-    font_style=xlwt.XFStyle()
-    rows =Expense.objects.filter(owner=request.user).values_list('amount', 'description', 'category', 'date')
+    font_style = xlwt.XFStyle()
+    rows = Expense.objects.filter(owner=request.user).values_list('amount', 'description', 'category', 'date')
     
     for row in rows:
-        row_num+=1
-        
+        row_num += 1
         for col_num in range(len(row)):
-            ws.write(row_num, col_num,str(row[col_num]), font_style)
+            ws.write(row_num, col_num, str(row[col_num]), font_style)
             
     wb.save(response)
     return response

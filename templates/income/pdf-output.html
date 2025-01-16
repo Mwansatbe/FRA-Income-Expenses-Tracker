@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income PDF Report</title>
+    <style>
+        @page {
+            size: "A4";
+            margin: 2.5cm 1.5cm 3.5cm 1.5cm;
+            @top-center {
+                content: "FRA Income Report";
+            }
+        }
+        .logo {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <img src="data:image/png;base64,{{ logo_base64 }}" alt="FRA Logo" class="logo">
+    <h2>Income Report</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Amount</th>
+                <th>Description</th>
+                <th>Source</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in income %}
+            <tr>
+                <td>{{ item.amount }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ item.source }}</td>
+                <td>{{ item.date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="total">
+        Total Income: {{ total }}
+    </div>
+</body>
+</html> 

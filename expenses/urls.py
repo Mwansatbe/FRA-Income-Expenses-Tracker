@@ -10,8 +10,8 @@ urlpatterns =[
   path('search-expense', csrf_exempt(views.search_expense), name='search_expense'),
   path("expense_category_summary", views.expense_category_summary, name="expense_category_summary"),
   path("stats_view", views.stats_view, name ="stats_view"),
-  path("export-csv", views.export_csv, name="export-csv"),
-  path("export-excel", views.export_excel, name="export-excel"),
-  path("export-pdf", views.export_pdf, name="export-pdf")
+  path("export_csv", views.export_csv, name="export_csv"),
+  path("export_excel", views.export_excel, name="export_excel"),
+  path("export-pdf", views.export_pdf, name="export_pdf")
 
 ]
