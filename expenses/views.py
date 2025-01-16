@@ -49,7 +49,7 @@ def index(request):
         user_preferences = UserPreferences.objects.get(user=request.user)
     except UserPreferences.DoesNotExist:
         # If no preferences found, create a new one with default 'USD' currency
-        user_preferences = UserPreferences.objects.create(user=request.user, currency='USD')
+        user_preferences = UserPreferences.objects.create(user=request.user, currency='ZMW - Zambian Kwacha')
 
     # Get the currency from user preferences
     currency = user_preferences.currency

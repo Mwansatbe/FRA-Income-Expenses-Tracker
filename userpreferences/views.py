@@ -17,12 +17,10 @@ def index(request):
             currency_data.append({'name': k, 'value': v})
             
             
-            
-    default_currency = 'USD'
     exists = UserPreferences.objects.filter(user=request.user).exists()
     user_preferences = None
     if exists:
-        user_preferences = UserPreferences.objects.get(user=request.user,  currency=default_currency)
+        user_preferences = UserPreferences.objects.get(user=request.user)
         
     if request.method == 'GET':
 

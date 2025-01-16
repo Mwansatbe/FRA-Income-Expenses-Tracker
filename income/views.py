@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404
 import json
 from django.http import HttpResponse, JsonResponse
 from django.utils.dateparse import parse_date
+import datetime
 
 # Create your views here.
 
@@ -34,17 +35,21 @@ def index(request):
     sources = Source.objects.all()  # Get all sources
     income = Income.objects.filter(owner=request.user)  # Filter incomes by the logged-in user
     
-    currency = UserPreferences.objects.get(user=request.user).currency
-
-    # Create a paginator object with 5 items per page
+    # Get user preferences with default currency handling
+    try:
+        currency = UserPreferences.objects.get(user=request.user).currency
+    except UserPreferences.DoesNotExist:
+        currency = 'ZMW - Zambian Kwacha'  # Default currency if preferences don't exist
+    
+    # Create a paginator object with 10 items per page
     paginator = Paginator(income, 10)
-
+    
     # Get the page number from the GET parameters
     page_number = request.GET.get('page')
-
+    
     # Get the page object for the current page number
     page_obj = paginator.get_page(page_number)
-
+    
     context = {
         "income": income,
         "page_obj": page_obj,
@@ -269,3 +274,31 @@ def delete_income(request, id):
     # Redirect to the income list page
     return redirect('income')
   
+  
+def income_sources_summary(request):
+    todays_date = datetime.date.today()
+    six_months_ago = todays_date - datetime.timedelta(days=30*6)
+    income = Income.objects.filter(
+        owner=request.user,
+        date__gte=six_months_ago, 
+        date__lte=todays_date
+    )
+    
+    finalrep = {}
+    
+    def get_source(income):
+        return income.source
+    
+    source_list = list(set(map(get_source, income)))
+    
+    # Calculate total for each source
+    for source in source_list:
+        filtered_by_source = income.filter(source=source)
+        amount = sum(item.amount for item in filtered_by_source)
+        finalrep[source] = amount
+    
+    return JsonResponse({"income_source_data": finalrep}, safe=False)
+        
+
+def stats_view(request):
+    return render(request, 'income/stats.html')
